@@ -11,6 +11,8 @@ import ClassroomView from './components/ClassroomView.tsx';
 import ProfileView from './components/ProfileView.tsx';
 import SettingsView from './components/SettingsView.tsx';
 import HelpView from './components/HelpView.tsx';
+import LandingPage from './components/LandingPage.tsx';
+import AdminView from './components/AdminView.tsx';
 import { 
   Sparkles, GraduationCap, Trophy, Flame, Compass, BookOpen, 
   Bookmark, Menu, X, Mic, Users, User, LogOut, CheckSquare, Loader2, AlertCircle, 
@@ -20,6 +22,27 @@ import {
 function AppContent() {
   const { user, loading, loginWithGoogle, logout, setRole, theme, setTheme } = useAuth();
   const [currentTab, setCurrentTab] = useState('dashboard');
+  const [brandName, setBrandName] = useState('EnglishUp');
+
+  // Load website branding dynamically
+  const fetchBranding = () => {
+    fetch('/api/website-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.websiteName) {
+          setBrandName(data.websiteName);
+        }
+      })
+      .catch(err => console.error("Error loading brand settings:", err));
+  };
+
+  useEffect(() => {
+    fetchBranding();
+    window.addEventListener('website-branding-updated', fetchBranding);
+    return () => {
+      window.removeEventListener('website-branding-updated', fetchBranding);
+    };
+  }, []);
 
   // Shared navigation flows
   const [selectedTopicSlug, setSelectedTopicSlug] = useState<string | null>(null);
@@ -104,53 +127,9 @@ function AppContent() {
     );
   }
 
-  // Renders the login portal if unauthenticated
+  // Renders the beautiful responsive landing page if unauthenticated
   if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 cosmic:bg-[#070614] flex items-center justify-center p-6" id="login-screen">
-        <div className="w-full max-w-md bg-white dark:bg-slate-900 cosmic:bg-[#0c0a1c] border border-slate-200/80 dark:border-slate-800/80 cosmic:border-indigo-950/80 rounded-3xl p-8 shadow-xl shadow-slate-100/50 dark:shadow-black/20 flex flex-col gap-6 text-center relative overflow-hidden">
-          
-          {/* Accent decoration */}
-          <div className="absolute top-0 inset-x-0 h-2.5 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
-
-          <div className="space-y-3">
-            <div className="w-14 h-14 rounded-3xl bg-emerald-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-100 dark:shadow-emerald-950/10 animate-pulse">
-              <Sparkles className="w-7 h-7 text-white" />
-            </div>
-            
-            <div className="space-y-1">
-              <h2 className="font-display font-extrabold text-2xl text-slate-800 dark:text-slate-100 cosmic:text-indigo-50 tracking-tight leading-tight">
-                Welcome to EnglishUp!
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 cosmic:text-indigo-300 font-medium leading-relaxed max-w-xs mx-auto">
-                Perfect your grammar, expand vocabularies with etymologies, and evaluate essays with AI.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-slate-50 dark:bg-slate-800/20 cosmic:bg-[#141233]/20 border border-slate-100 dark:border-slate-800 cosmic:border-indigo-950/40 rounded-2xl p-4 text-xxs text-slate-500 dark:text-slate-400 cosmic:text-indigo-200 space-y-1.5 text-left leading-normal">
-            <span className="font-bold text-slate-700 dark:text-slate-300 cosmic:text-indigo-100 block uppercase tracking-wider mb-1">Premium Platform Offerings:</span>
-            <p>✓ Progressive parts-of-speech learning</p>
-            <p>✓ Searchable dictionary with Bangla translations</p>
-            <p>✓ Automated voice recorders with phonetic aligners</p>
-            <p>✓ Interactive classwork assignment schedules</p>
-          </div>
-
-          <button
-            onClick={loginWithGoogle}
-            id="login-google-btn"
-            className="w-full bg-emerald-500 hover:bg-emerald-600 active:translate-y-0.5 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-100 dark:shadow-emerald-950/20 transition duration-150 btn-playful text-sm flex items-center justify-center gap-3 cursor-pointer"
-          >
-            <GraduationCap className="w-5 h-5" />
-            Sign In with Google Account
-          </button>
-
-          <p className="text-xxs text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
-            Supported by Cloud SQL & Gemini AI
-          </p>
-        </div>
-      </div>
-    );
+    return <LandingPage onLogin={loginWithGoogle} />;
   }
 
   // Header Title Resolver
@@ -163,10 +142,11 @@ function AppContent() {
       case 'speaking': return 'Phonetic Speaking Lab';
       case 'ai-tutor': return 'Gemini AI Assistant';
       case 'classroom': return 'Academic Classroom';
+      case 'admin': return 'Admin Dashboard';
       case 'profile': return 'My Scholar Profile';
       case 'settings': return 'Platform Settings';
       case 'help': return 'Help & Onboarding Tour';
-      default: return 'EnglishUp Learning Platform';
+      default: return brandName + ' Learning Platform';
     }
   };
 
@@ -199,7 +179,7 @@ function AppContent() {
               <Menu className="w-5 h-5" />
             </button>
             <div className="hidden sm:block">
-              <span className="text-xxs font-extrabold tracking-widest text-emerald-500 uppercase">EnglishUp</span>
+              <span className="text-xxs font-extrabold tracking-widest text-emerald-500 uppercase">{brandName}</span>
               <h2 className="font-display font-extrabold text-base text-slate-800 dark:text-slate-100 cosmic:text-indigo-50 leading-none mt-0.5">{getTabTitle()}</h2>
             </div>
             <div className="sm:hidden block">
@@ -304,6 +284,18 @@ function AppContent() {
           {currentTab === 'classroom' && (
             <ClassroomView user={user} role={user.role} />
           )}
+          {currentTab === 'admin' && (
+            <AdminView user={user} />
+          )}
+          {currentTab === 'profile' && (
+            <ProfileView user={user} setCurrentTab={handleTabChange} />
+          )}
+          {currentTab === 'settings' && (
+            <SettingsView />
+          )}
+          {currentTab === 'help' && (
+            <HelpView />
+          )}
         </main>
 
         {/* Mobile Slide Drawer (Navigation Overlay) */}
@@ -331,7 +323,7 @@ function AppContent() {
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-display font-extrabold text-base text-slate-800 dark:text-slate-100 cosmic:text-indigo-100 tracking-tight leading-none">EnglishUp</h3>
+                    <h3 className="font-display font-extrabold text-base text-slate-800 dark:text-slate-100 cosmic:text-indigo-100 tracking-tight leading-none">{brandName}</h3>
                     <span className="text-xxs font-semibold text-emerald-500">Interactive Hub</span>
                   </div>
                 </div>
@@ -346,6 +338,7 @@ function AppContent() {
                     { id: 'speaking', label: 'Speaking Center', icon: Mic, color: 'text-violet-500' },
                     { id: 'ai-tutor', label: 'AI Tutor & Prep', icon: Sparkles, color: 'text-purple-500' },
                     { id: 'classroom', label: 'My Classroom', icon: Users, color: 'text-cyan-500' },
+                    ...(user?.role === 'admin' ? [{ id: 'admin', label: 'Admin Panel', icon: Shield, color: 'text-rose-500' }] : []),
                   ].map((item) => {
                     const Icon = item.icon;
                     const isActive = currentTab === item.id;

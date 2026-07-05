@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   BookOpen, Compass, Award, Trophy, Bookmark, Settings, User, Users, 
   Flame, HelpCircle, PenTool, Mic, Sparkles, LogOut, CheckCircle,
-  ChevronLeft, ChevronRight, Sun, Moon, Sparkles as CosmicIcon, Monitor
+  ChevronLeft, ChevronRight, Sun, Moon, Sparkles as CosmicIcon, Monitor, Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 
@@ -30,6 +30,7 @@ export default function Sidebar({ currentTab, setCurrentTab, user, onLogout, rol
     { id: 'speaking', label: 'Speaking Center', icon: Mic, color: 'text-violet-500' },
     { id: 'ai-tutor', label: 'AI Tutor & Prep', icon: Sparkles, color: 'text-purple-500' },
     { id: 'classroom', label: 'My Classroom', icon: Users, color: 'text-cyan-500' },
+    ...(role === 'admin' ? [{ id: 'admin', label: 'Admin Panel', icon: Shield, color: 'text-rose-500' }] : []),
     { id: 'profile', label: 'My Profile', icon: User, color: 'text-indigo-500' },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'text-slate-500' },
     { id: 'help', label: 'Help & Tour', icon: HelpCircle, color: 'text-emerald-600' },
@@ -176,39 +177,6 @@ export default function Sidebar({ currentTab, setCurrentTab, user, onLogout, rol
             </>
           )}
         </div>
-
-        {/* Toggle Student / Teacher role */}
-        {!isCollapsed ? (
-          <div className="bg-slate-50 dark:bg-slate-800/20 cosmic:bg-[#141233]/20 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800 cosmic:border-indigo-950/60 flex flex-col gap-2">
-            <div className="flex justify-between items-center px-1.5">
-              <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase">Platform Role</span>
-              <span className={`text-xxs font-extrabold px-1.5 py-0.5 rounded-md uppercase ${
-                role === 'teacher' ? 'bg-cyan-100 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-400' : 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400'
-              }`}>
-                {role}
-              </span>
-            </div>
-            <button
-              id="role-swap-btn"
-              onClick={handleRoleSwap}
-              className="w-full text-center py-2 bg-white dark:bg-slate-800 cosmic:bg-[#13112b] border border-slate-200 dark:border-slate-700 cosmic:border-indigo-950 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition btn-playful shadow-sm"
-            >
-              Swap to {role === 'student' ? 'Teacher' : 'Student'}
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleRoleSwap}
-            className={`p-2.5 rounded-2xl border flex items-center justify-center transition btn-playful ${
-              role === 'teacher' 
-                ? 'bg-cyan-50 dark:bg-cyan-950/20 border-cyan-100 dark:border-cyan-900/40 text-cyan-600' 
-                : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40 text-emerald-600'
-            }`}
-            title={`Role: ${role} (Click to swap)`}
-          >
-            <User className="w-5 h-5" />
-          </button>
-        )}
 
         {/* User profile card */}
         <div className={`flex items-center ${isCollapsed ? 'flex-col gap-3.5' : 'gap-3'}`}>

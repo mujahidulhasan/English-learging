@@ -1,0 +1,36 @@
+{
+  "websiteName": "EnglishUp",
+  "shortName": "EnglishUp",
+  "description": "Premium AI-powered English learning platform.",
+  "version": "1.0.0",
+  "author": "Google AI Studio",
+  "email": "info@englishup.io",
+  "supportEmail": "support@englishup.io",
+  "logo": "/logo.png",
+  "favicon": "/favicon.png",
+  "primaryColor": "#10b981",
+  "secondaryColor": "#3b82f6",
+  "accentColor": "#f59e0b",
+  "defaultLanguage": "en",
+  "socialLinks": {
+    "twitter": "https://twitter.com/englishup",
+    "facebook": "https://facebook.com/englishup",
+    "youtube": "https://youtube.com/englishup",
+    "github": "https://github.com/englishup"
+  },
+  "footerLinks": [
+    { "label": "About Us", "url": "#about" },
+    { "label": "Features", "url": "#features" },
+    { "label": "Pricing", "url": "#pricing" },
+    { "label": "Privacy Policy", "url": "#privacy" },
+    { "label": "Terms of Service", "url": "#terms" }
+  ],
+  "copyright": "© 2026 EnglishUp. All rights reserved.",
+  "contact": {
+    "phone": "+1 (555) 019-2834",
+    "address": "1600 Amphitheatre Pkwy, Mountain View, CA 94043"
+  },
+  "about": "EnglishUp is a modern educational SaaS platform comparable in polish to Duolingo and Notion, guiding users on the path to fluency with custom AI systems and high fidelity micro-interactions.",
+  "privacyPolicy": "Your privacy is of the utmost importance. We only retain personal details necessary to facilitate your user profile, daily check-ins, achievements, and educational progress records securely.",
+  "terms": "By registering an account with EnglishUp, you agree to make educational learning, practice quizzes, and interactive audio speaking tasks a productive habit in accordance with our terms of service."
+}

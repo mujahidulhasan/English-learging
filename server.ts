@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
 import {
@@ -36,6 +37,9 @@ import {
   seedGrammarContent,
   seedVocabularyContent,
   seedQuizContent,
+  getAdminStats,
+  getAllUsers,
+  adminUpdateUserRole,
 } from './src/db/helpers.ts';
 import {
   explainEnglishTopic,
@@ -465,6 +469,108 @@ app.post('/api/ai/custom-quiz', async (req, res) => {
 });
 
 
+// 10. Website Settings Info API
+app.get('/api/website-info', async (req, res) => {
+  const filePath = path.join(process.cwd(), 'public', 'website-info.json');
+  try {
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      return res.json(JSON.parse(content));
+    }
+    // Fallback if not found
+    return res.json({
+      websiteName: "EnglishUp",
+      shortName: "EnglishUp",
+      primaryColor: "#10b981",
+      accentColor: "#f59e0b"
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/website-info', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const dbUser = await getOrCreateUser(user.uid, user.email!);
+    if (dbUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Admin access required.' });
+    }
+
+    const filePath = path.join(process.cwd(), 'public', 'website-info.json');
+    let currentData = {};
+    if (fs.existsSync(filePath)) {
+      currentData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    }
+
+    const updatedData = { ...currentData, ...req.body };
+    fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2), 'utf-8');
+    res.json(updatedData);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 11. Admin Endpoints
+app.get('/api/admin/stats', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const dbUser = await getOrCreateUser(user.uid, user.email!);
+    if (dbUser.role !== 'admin' && dbUser.role !== 'teacher') {
+      return res.status(403).json({ error: 'Forbidden: Admin or Teacher role required.' });
+    }
+
+    const stats = await getAdminStats();
+    res.json(stats);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/users', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const dbUser = await getOrCreateUser(user.uid, user.email!);
+    if (dbUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Admin role required.' });
+    }
+
+    const list = await getAllUsers();
+    res.json(list);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/user-role', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const dbUser = await getOrCreateUser(user.uid, user.email!);
+    if (dbUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Admin role required.' });
+    }
+
+    const { userId, role } = req.body;
+    if (!userId || !role) {
+      return res.status(400).json({ error: 'userId and role are required' });
+    }
+
+    const updated = await adminUpdateUserRole(Number(userId), role);
+    res.json({ success: true, user: updated });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // Boot and Seeder Function
 async function startServer() {
   console.log('Validating database schema and seeding initial content...');
@@ -480,7 +586,10 @@ async function startServer() {
   // Vite development integration or static rendering
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { 
+        middlewareMode: true,
+        hmr: false,
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

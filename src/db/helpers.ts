@@ -986,3 +986,72 @@ export async function updateUserSettings(userId: number, data: Partial<typeof se
   }
 }
 
+export async function getAdminStats() {
+  try {
+    const usersCount = await db.select({ count: sql<number>`count(*)::int` }).from(users);
+    const teachersCount = await db.select({ count: sql<number>`count(*)::int` }).from(users).where(eq(users.role, 'teacher'));
+    const studentsCount = await db.select({ count: sql<number>`count(*)::int` }).from(users).where(eq(users.role, 'student'));
+    const classroomsCount = await db.select({ count: sql<number>`count(*)::int` }).from(classrooms);
+    const vocabularyCount = await db.select({ count: sql<number>`count(*)::int` }).from(vocabulary);
+    const quizzesCount = await db.select({ count: sql<number>`count(*)::int` }).from(quizzes);
+    const submissionsCount = await db.select({ count: sql<number>`count(*)::int` }).from(assignmentSubmissions);
+
+    return {
+      totalUsers: usersCount[0]?.count || 0,
+      totalTeachers: teachersCount[0]?.count || 0,
+      totalStudents: studentsCount[0]?.count || 0,
+      totalClassrooms: classroomsCount[0]?.count || 0,
+      totalVocabulary: vocabularyCount[0]?.count || 0,
+      totalQuizzes: quizzesCount[0]?.count || 0,
+      totalSubmissions: submissionsCount[0]?.count || 0,
+    };
+  } catch (error) {
+    handleDbError('getAdminStats', error);
+    return {
+      totalUsers: 0,
+      totalTeachers: 0,
+      totalStudents: 0,
+      totalClassrooms: 0,
+      totalVocabulary: 0,
+      totalQuizzes: 0,
+      totalSubmissions: 0,
+    };
+  }
+}
+
+export async function getAllUsers() {
+  try {
+    const list = await db.select({
+      id: users.id,
+      uid: users.uid,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt,
+      fullName: profiles.fullName,
+      avatarUrl: profiles.avatarUrl,
+      currentXp: profiles.currentXp,
+      coins: profiles.coins,
+    })
+    .from(users)
+    .leftJoin(profiles, eq(users.id, profiles.userId))
+    .orderBy(desc(users.createdAt));
+    return list;
+  } catch (error) {
+    handleDbError('getAllUsers', error);
+    return [];
+  }
+}
+
+export async function adminUpdateUserRole(userId: number, role: 'student' | 'teacher' | 'admin') {
+  try {
+    const result = await db.update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  } catch (error) {
+    handleDbError('adminUpdateUserRole', error);
+  }
+}
+
+
