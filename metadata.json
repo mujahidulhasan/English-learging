@@ -1,0 +1,10 @@
+{
+  "name": "English Learning Platform",
+  "description": "An immersive, playful, and premium English learning platform featuring dynamic quizzes, an AI Tutor, interactive practice modules, spaced repetition, classroom management, and comprehensive analytics.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
